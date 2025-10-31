@@ -1,0 +1,5 @@
+{
+  "name": "Fleet Management Pro",
+  "description": "A comprehensive application for managing an entity's vehicle fleet, including transport requests, vehicle and driver assignments, maintenance schedules, service surveys, and data-driven reports and analytics powered by Gemini.",
+  "requestFramePermissions": []
+}
