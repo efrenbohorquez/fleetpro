@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Vehicle, VehicleStatus } from '../types';
 import { Modal } from './common/Modal';
 import { PlusIcon, EditIcon, DeleteIcon } from './icons';
@@ -32,7 +32,7 @@ const Vehicles: React.FC<VehiclesProps> = ({ vehicles, setVehicles }) => {
     console.log('🔴 Abriendo modal de eliminación para:', vehicle);
     setSelectedVehicle(vehicle);
     setIsDeleteModalOpen(true);
-  };
+  }
 
   const handleSave = (vehicleData: Omit<Vehicle, 'id'>) => {
     if (selectedVehicle) {
@@ -54,14 +54,15 @@ const Vehicles: React.FC<VehiclesProps> = ({ vehicles, setVehicles }) => {
           setIsDeleteModalOpen(false);
           setSelectedVehicle(null);
       }
-  };
+  }
 
-  const handleViewHistory = (vehicle: Vehicle) => {
+  const handleDownloadHistory = (vehicle: Vehicle) => {
     console.log('📄 Abriendo hoja de vida para:', vehicle);
     setSelectedVehicle(vehicle);
     setIsHistoryModalOpen(true);
-  };
+  }
 
+  // Filtrado
   const filteredVehicles = vehicles.filter(vehicle => {
     const matchesSearch = 
       vehicle.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,6 +72,7 @@ const Vehicles: React.FC<VehiclesProps> = ({ vehicles, setVehicles }) => {
     return matchesSearch && matchesStatus;
   });
 
+  // Ordenamiento alfabético por modelo
   const sortedVehicles = [...filteredVehicles].sort((a, b) => {
     return a.model.localeCompare(b.model, 'es', { sensitivity: 'base' });
   });
@@ -92,6 +94,7 @@ const Vehicles: React.FC<VehiclesProps> = ({ vehicles, setVehicles }) => {
         </button>
       </div>
 
+      {/* Búsqueda y filtros */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -128,12 +131,12 @@ const Vehicles: React.FC<VehiclesProps> = ({ vehicles, setVehicles }) => {
 
       <div className="bg-white p-6 rounded-lg shadow-md overflow-x-auto">
         <div className="mb-4 text-sm text-gray-600">
-          <strong>{sortedVehicles.length}</strong> vehículo{sortedVehicles.length !== 1 ? 's' : ''} encontrado{sortedVehicles.length !== 1 ? 's' : ''}
+          <strong>{sortedVehicles.length}</strong> vehículo{sortedVehicles.length !== 1 ? 's' : ''} encontrado{sortedVehicles.length !== 1 ? 's' : ''} (Ordenados alfabéticamente)
         </div>
         
         {sortedVehicles.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            No se encontraron vehículos
+            No se encontraron vehículos con los criterios de búsqueda
           </div>
         ) : (
           <table className="w-full text-sm text-left text-gray-500">
@@ -154,7 +157,7 @@ const Vehicles: React.FC<VehiclesProps> = ({ vehicles, setVehicles }) => {
                   <td className="px-6 py-4 font-medium text-gray-900">{vehicle.model}</td>
                   <td className="px-6 py-4">{vehicle.make}</td>
                   <td className="px-6 py-4">{vehicle.year}</td>
-                  <td className="px-6 py-4 font-mono">{vehicle.plate}</td>
+                  <td className="px-6 py-4">{vehicle.plate}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${statusColorMap[vehicle.status]}`}>
                       {vehicle.status}
@@ -166,9 +169,10 @@ const Vehicles: React.FC<VehiclesProps> = ({ vehicles, setVehicles }) => {
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          handleViewHistory(vehicle);
+                          handleDownloadHistory(vehicle);
                         }}
-                        className="px-3 py-1.5 bg-green-600 text-white text-xs rounded hover:bg-green-700 font-medium"
+                        className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 font-medium"
+                        title="Ver hoja de vida"
                       >
                         📄 Ver Hoja
                       </button>
@@ -185,6 +189,7 @@ const Vehicles: React.FC<VehiclesProps> = ({ vehicles, setVehicles }) => {
                           handleOpenModal(vehicle);
                         }} 
                         className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 font-medium flex items-center"
+                        title="Editar"
                       >
                         <EditIcon className="w-3 h-3 mr-1" />
                         Editar
@@ -196,6 +201,7 @@ const Vehicles: React.FC<VehiclesProps> = ({ vehicles, setVehicles }) => {
                           handleOpenDeleteModal(vehicle);
                         }} 
                         className="px-3 py-1.5 bg-red-600 text-white text-xs rounded hover:bg-red-700 font-medium flex items-center"
+                        title="Eliminar"
                       >
                         <DeleteIcon className="w-3 h-3 mr-1" />
                         Eliminar
@@ -206,41 +212,12 @@ const Vehicles: React.FC<VehiclesProps> = ({ vehicles, setVehicles }) => {
               ))}
             </tbody>
           </table>
-        )}
+        )
+      }
       </div>
-
-      {isModalOpen && (
-        <VehicleFormModal 
-          isOpen={isModalOpen}
-          vehicle={selectedVehicle} 
-          onSave={handleSave} 
-          onClose={() => {
-            setIsModalOpen(false);
-            setSelectedVehicle(null);
-          }} 
-        />
-      )}
-      {isDeleteModalOpen && selectedVehicle && (
-        <ConfirmDeleteModal 
-          isOpen={isDeleteModalOpen}
-          onConfirm={handleDelete} 
-          onClose={() => {
-            setIsDeleteModalOpen(false);
-            setSelectedVehicle(null);
-          }} 
-          itemName={`${selectedVehicle.model} - ${selectedVehicle.plate}`} 
-        />
-      )}
-      {isHistoryModalOpen && selectedVehicle && (
-        <VehicleHistoryModal 
-          isOpen={isHistoryModalOpen}
-          vehicle={selectedVehicle} 
-          onClose={() => {
-            setIsHistoryModalOpen(false);
-            setSelectedVehicle(null);
-          }} 
-        />
-      )}
+      {isModalOpen && <VehicleFormModal isOpen={isModalOpen} vehicle={selectedVehicle} onSave={handleSave} onClose={() => setIsModalOpen(false)} />}
+      {isDeleteModalOpen && selectedVehicle && <ConfirmDeleteModal isOpen={isDeleteModalOpen} onConfirm={handleDelete} onClose={() => setIsDeleteModalOpen(false)} itemName={`${selectedVehicle.model} - ${selectedVehicle.plate}`} />}
+      {isHistoryModalOpen && selectedVehicle && <VehicleHistoryModal isOpen={isHistoryModalOpen} vehicle={selectedVehicle} onClose={() => setIsHistoryModalOpen(false)} />}
     </div>
   );
 };
@@ -309,12 +286,15 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, vehicle, on
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('💾 Guardando vehículo:', formData);
         onSave(formData);
     };
 
     return (
         <Modal isOpen={isOpen} title={vehicle ? 'Editar Vehículo' : 'Crear Vehículo'} onClose={onClose}>
             <form onSubmit={handleSubmit} className="max-h-[70vh] overflow-y-auto">
+                
+                {/* Información Básica */}
                 <div className="mb-6">
                     <h3 className="text-lg font-bold text-gray-900 mb-3">🚗 Información Básica</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -325,7 +305,8 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, vehicle, on
                                 name="make" 
                                 value={formData.make} 
                                 onChange={handleChange} 
-                                className="w-full p-2 border rounded" 
+                                placeholder="Ej: Toyota" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500" 
                                 required 
                             />
                         </div>
@@ -336,7 +317,8 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, vehicle, on
                                 name="model" 
                                 value={formData.model} 
                                 onChange={handleChange} 
-                                className="w-full p-2 border rounded" 
+                                placeholder="Ej: Land Cruiser Prado" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500" 
                                 required 
                             />
                         </div>
@@ -347,7 +329,8 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, vehicle, on
                                 name="year" 
                                 value={formData.year} 
                                 onChange={handleChange} 
-                                className="w-full p-2 border rounded" 
+                                placeholder="2020" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500" 
                                 required 
                             />
                         </div>
@@ -358,7 +341,8 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, vehicle, on
                                 name="plate" 
                                 value={formData.plate} 
                                 onChange={handleChange} 
-                                className="w-full p-2 border rounded uppercase" 
+                                placeholder="ABC123" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500 uppercase" 
                                 required 
                             />
                         </div>
@@ -369,7 +353,8 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, vehicle, on
                                 name="color" 
                                 value={formData.color} 
                                 onChange={handleChange} 
-                                className="w-full p-2 border rounded" 
+                                placeholder="Blanco" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500" 
                             />
                         </div>
                         <div>
@@ -378,7 +363,7 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, vehicle, on
                                 name="status" 
                                 value={formData.status} 
                                 onChange={handleChange} 
-                                className="w-full p-2 border rounded"
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500"
                             >
                                 {Object.values(VehicleStatus).map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
@@ -386,69 +371,153 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, vehicle, on
                     </div>
                 </div>
 
+                {/* Especificaciones Técnicas */}
                 <div className="mb-6 pt-4 border-t">
                     <h3 className="text-lg font-bold text-gray-900 mb-3">⚙️ Especificaciones Técnicas</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">VIN</label>
-                            <input type="text" name="vin" value={formData.vin} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <input 
+                                type="text" 
+                                name="vin" 
+                                value={formData.vin} 
+                                onChange={handleChange} 
+                                placeholder="Número de identificación vehicular" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500 font-mono text-sm" 
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Kilometraje</label>
-                            <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <input 
+                                type="number" 
+                                name="mileage" 
+                                value={formData.mileage} 
+                                onChange={handleChange} 
+                                placeholder="0" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500" 
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Combustible</label>
-                            <input type="text" name="fuelType" value={formData.fuelType} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <input 
+                                type="text" 
+                                name="fuelType" 
+                                value={formData.fuelType} 
+                                onChange={handleChange} 
+                                placeholder="Gasolina/Diesel" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500" 
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Capacidad</label>
-                            <input type="number" name="capacity" value={formData.capacity} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Capacidad (pasajeros)</label>
+                            <input 
+                                type="number" 
+                                name="capacity" 
+                                value={formData.capacity} 
+                                onChange={handleChange} 
+                                placeholder="5" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500" 
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Número de Motor</label>
-                            <input type="text" name="engineNumber" value={formData.engineNumber} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <input 
+                                type="text" 
+                                name="engineNumber" 
+                                value={formData.engineNumber} 
+                                onChange={handleChange} 
+                                placeholder="Motor" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500 font-mono text-sm" 
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Número de Chasis</label>
-                            <input type="text" name="chassisNumber" value={formData.chassisNumber} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <input 
+                                type="text" 
+                                name="chassisNumber" 
+                                value={formData.chassisNumber} 
+                                onChange={handleChange} 
+                                placeholder="Chasis" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500 font-mono text-sm" 
+                            />
                         </div>
                     </div>
                 </div>
 
+                {/* Propiedad y Seguros */}
                 <div className="mb-6 pt-4 border-t">
                     <h3 className="text-lg font-bold text-gray-900 mb-3">📄 Propiedad y Seguros</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Propietario</label>
-                            <input type="text" name="owner" value={formData.owner} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <input 
+                                type="text" 
+                                name="owner" 
+                                value={formData.owner} 
+                                onChange={handleChange} 
+                                placeholder="Nombre del propietario" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500" 
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Aseguradora</label>
-                            <input type="text" name="insuranceCompany" value={formData.insuranceCompany} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <input 
+                                type="text" 
+                                name="insuranceCompany" 
+                                value={formData.insuranceCompany} 
+                                onChange={handleChange} 
+                                placeholder="Nombre de la aseguradora" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500" 
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Póliza</label>
-                            <input type="text" name="insurancePolicy" value={formData.insurancePolicy} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Número de Póliza</label>
+                            <input 
+                                type="text" 
+                                name="insurancePolicy" 
+                                value={formData.insurancePolicy} 
+                                onChange={handleChange} 
+                                placeholder="Póliza" 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500" 
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">SOAT</label>
-                            <input type="date" name="soatExpiry" value={formData.soatExpiry} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Vencimiento SOAT</label>
+                            <input 
+                                type="date" 
+                                name="soatExpiry" 
+                                value={formData.soatExpiry} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500" 
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Revisión Técnica</label>
-                            <input type="date" name="techReviewExpiry" value={formData.techReviewExpiry} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Vencimiento Revisión Técnica</label>
+                            <input 
+                                type="date" 
+                                name="techReviewExpiry" 
+                                value={formData.techReviewExpiry} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500" 
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Archivo Hoja de Vida</label>
-                            <input type="text" name="historyFile" value={formData.historyFile} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <input 
+                                type="text" 
+                                name="historyFile" 
+                                value={formData.historyFile} 
+                                onChange={handleChange} 
+                                placeholder="data/Hoja de Vida Vehículos/..." 
+                                className="w-full p-2 border rounded focus:ring-blue-500 focus:border-blue-500 text-sm" 
+                            />
                         </div>
                     </div>
                 </div>
 
-                <div className="flex justify-end space-x-3 pt-4 border-t">
-                    <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Guardar</button>
+                <div className="flex justify-end space-x-3 pt-4 border-t sticky bottom-0 bg-white">
+                    <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 font-medium">Cancelar</button>
+                    <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">Guardar</button>
                 </div>
             </form>
         </Modal>
@@ -457,55 +526,96 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, vehicle, on
 
 const ConfirmDeleteModal: React.FC<{isOpen: boolean, onConfirm: () => void, onClose: () => void, itemName: string}> = ({isOpen, onConfirm, onClose, itemName}) => (
     <Modal isOpen={isOpen} title="Confirmar Eliminación" onClose={onClose}>
-        <p className="text-gray-700 mb-4">¿Estás seguro de eliminar <strong>{itemName}</strong>?</p>
-        <div className="flex justify-end space-x-3">
-            <button onClick={onClose} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancelar</button>
-            <button onClick={onConfirm} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Eliminar</button>
+        <p className="text-gray-700 mb-4">¿Estás seguro de que deseas eliminar <strong className="text-gray-900">{itemName}</strong>? Esta acción no se puede deshacer.</p>
+        <div className="flex justify-end space-x-3 mt-6">
+            <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 font-medium">Cancelar</button>
+            <button type="button" onClick={onConfirm} className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium">Eliminar</button>
         </div>
     </Modal>
 );
 
 const VehicleHistoryModal: React.FC<{isOpen: boolean, vehicle: Vehicle, onClose: () => void}> = ({isOpen, vehicle, onClose}) => (
-    <Modal isOpen={isOpen} title={`📋 Hoja de Vida - ${vehicle.model}`} onClose={onClose}>
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-            <div className="bg-blue-50 p-4 rounded">
-                <h3 className="font-bold mb-2">🚗 Información General</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div><strong>Modelo:</strong> {vehicle.model}</div>
-                    <div><strong>Marca:</strong> {vehicle.make}</div>
-                    <div><strong>Placa:</strong> {vehicle.plate}</div>
-                    <div><strong>Año:</strong> {vehicle.year}</div>
-                    <div><strong>Color:</strong> {vehicle.color || 'N/A'}</div>
-                    <div><strong>VIN:</strong> {vehicle.vin || 'N/A'}</div>
+    <Modal isOpen={isOpen} title={`📋 Hoja de Vida - ${vehicle.model} (${vehicle.plate})`} onClose={onClose}>
+        <div className="space-y-6 max-h-[70vh] overflow-y-auto">
+            {/* Información General */}
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-200">
+                <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center">
+                    🚗 Información General
+                </h3>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div><span className="font-semibold text-gray-700">Modelo:</span> <span className="text-gray-900">{vehicle.model}</span></div>
+                    <div><span className="font-semibold text-gray-700">Placa:</span> <span className="text-gray-900 font-mono bg-white px-2 py-1 rounded">{vehicle.plate}</span></div>
+                    <div><span className="font-semibold text-gray-700">Año:</span> <span className="text-gray-900">{vehicle.year}</span></div>
+                    <div><span className="font-semibold text-gray-700">Color:</span> <span className="text-gray-900">{vehicle.color || 'No especificado'}</span></div>
+                    <div className="col-span-2"><span className="font-semibold text-gray-700">VIN:</span> <span className="text-gray-900 font-mono text-xs bg-white px-2 py-1 rounded">{vehicle.vin || 'No especificado'}</span></div>
                 </div>
             </div>
-            <div className="bg-green-50 p-4 rounded">
-                <h3 className="font-bold mb-2">⚙️ Especificaciones</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div><strong>Combustible:</strong> {vehicle.fuelType || 'N/A'}</div>
-                    <div><strong>Capacidad:</strong> {vehicle.capacity || 'N/A'}</div>
-                    <div><strong>Kilometraje:</strong> {vehicle.mileage || 'N/A'} km</div>
-                    <div><strong>Estado:</strong> {vehicle.status}</div>
+
+            {/* Especificaciones Técnicas */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                <h3 className="text-lg font-bold text-green-900 mb-3 flex items-center">
+                    ⚙️ Especificaciones Técnicas
+                </h3>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div><span className="font-semibold text-gray-700">Combustible:</span> <span className="text-gray-900">{vehicle.fuelType || 'No especificado'}</span></div>
+                    <div><span className="font-semibold text-gray-700">Capacidad:</span> <span className="text-gray-900">{vehicle.capacity || 'N/A'} pasajeros</span></div>
+                    <div><span className="font-semibold text-gray-700">Kilometraje:</span> <span className="text-gray-900 font-semibold">{vehicle.mileage ? `${vehicle.mileage.toLocaleString()} km` : 'No especificado'}</span></div>
+                    <div><span className="font-semibold text-gray-700">Estado:</span> <span className={`px-2 py-1 rounded text-xs font-semibold ${statusColorMap[vehicle.status]}`}>{vehicle.status}</span></div>
+                    <div className="col-span-2"><span className="font-semibold text-gray-700">Motor:</span> <span className="text-gray-900 font-mono text-xs bg-white px-2 py-1 rounded">{vehicle.engineNumber || 'No especificado'}</span></div>
+                    <div className="col-span-2"><span className="font-semibold text-gray-700">Chasis:</span> <span className="text-gray-900 font-mono text-xs bg-white px-2 py-1 rounded">{vehicle.chassisNumber || 'No especificado'}</span></div>
                 </div>
             </div>
-            <div className="bg-orange-50 p-4 rounded">
-                <h3 className="font-bold mb-2">📄 Documentación</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div><strong>Aseguradora:</strong> {vehicle.insuranceCompany || 'N/A'}</div>
-                    <div><strong>Póliza:</strong> {vehicle.insurancePolicy || 'N/A'}</div>
-                    <div><strong>SOAT:</strong> {vehicle.soatExpiry || 'N/A'}</div>
-                    <div><strong>Revisión:</strong> {vehicle.techReviewExpiry || 'N/A'}</div>
+
+            {/* Propiedad */}
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
+                <h3 className="text-lg font-bold text-purple-900 mb-3 flex items-center">
+                    👤 Propiedad
+                </h3>
+                <div className="text-sm">
+                    <div><span className="font-semibold text-gray-700">Propietario:</span> <span className="text-gray-900">{vehicle.owner || 'No especificado'}</span></div>
                 </div>
             </div>
+
+            {/* Documentación Legal */}
+            <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg border border-orange-200">
+                <h3 className="text-lg font-bold text-orange-900 mb-3 flex items-center">
+                    📄 Documentación Legal
+                </h3>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div><span className="font-semibold text-gray-700">Aseguradora:</span> <span className="text-gray-900">{vehicle.insuranceCompany || 'No especificado'}</span></div>
+                    <div><span className="font-semibold text-gray-700">Póliza:</span> <span className="text-gray-900 font-mono text-xs bg-white px-2 py-1 rounded">{vehicle.insurancePolicy || 'No especificado'}</span></div>
+                    <div><span className="font-semibold text-gray-700">SOAT vence:</span> <span className={`text-gray-900 font-semibold ${vehicle.soatExpiry && new Date(vehicle.soatExpiry) < new Date(Date.now() + 30*24*60*60*1000) ? 'text-red-600' : ''}`}>{vehicle.soatExpiry || 'No especificado'}</span></div>
+                    <div><span className="font-semibold text-gray-700">Revisión técnica:</span> <span className={`text-gray-900 font-semibold ${vehicle.techReviewExpiry && new Date(vehicle.techReviewExpiry) < new Date(Date.now() + 30*24*60*60*1000) ? 'text-red-600' : ''}`}>{vehicle.techReviewExpiry || 'No especificado'}</span></div>
+                </div>
+            </div>
+
+            {/* Archivo */}
             {vehicle.historyFile && (
-                <div className="bg-gray-50 p-4 rounded">
-                    <h3 className="font-bold mb-2">📁 Archivo</h3>
-                    <p className="text-sm font-mono break-all">{vehicle.historyFile}</p>
+                <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-4 rounded-lg border border-gray-300">
+                    <h3 className="text-lg font-bold text-gray-900 mb-3 flex items-center">
+                        📁 Archivo Excel
+                    </h3>
+                    <div className="text-sm">
+                        <div className="bg-white p-3 rounded border border-gray-200 font-mono text-xs break-all mb-3">
+                            {vehicle.historyFile}
+                        </div>
+                        <div className="bg-blue-100 border border-blue-300 rounded p-3">
+                            <p className="text-blue-900 text-xs">
+                                <strong>💡 Ubicación del archivo:</strong><br/>
+                                <code className="bg-white px-2 py-1 rounded mt-1 inline-block">
+                                    {vehicle.historyFile.replace('data/', 'D:/FLOTA GEMINI/fleetpro/data/')}
+                                </code>
+                            </p>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
-        <div className="flex justify-end mt-4">
-            <button onClick={onClose} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Cerrar</button>
+        
+        <div className="flex justify-end mt-6 pt-4 border-t">
+            <button type="button" onClick={onClose} className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
+                Cerrar
+            </button>
         </div>
     </Modal>
 );

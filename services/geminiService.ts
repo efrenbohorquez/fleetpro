@@ -1,15 +1,21 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
+// Vite usa import.meta.env para variables de entorno
+const API_KEY = (import.meta as any).env?.VITE_API_KEY || '';
 
 if (!API_KEY) {
-  console.error("Gemini API key is not set in environment variables.");
+  console.warn("Gemini API key is not set. Analytics features will be limited.");
 }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
 export const getAnalyticsInsights = async (data: object): Promise<string> => {
+  // Si no hay API key, retornar mensaje informativo
+  if (!ai) {
+    return "⚠️ Análisis con IA no disponible. Configure VITE_API_KEY para habilitar esta función.";
+  }
+
   const prompt = `
     Eres un analista experto en gestión de flotas. Analiza los siguientes datos de una flota en formato JSON y proporciona un resumen ejecutivo con insights clave.
     
