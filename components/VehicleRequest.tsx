@@ -562,10 +562,10 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<RequestStatus | 'all'>('all');
-  const [filterDateFrom, setFilterDateFrom] = useState('');
-  const [filterDateTo, setFilterDateTo] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'status' | 'requester'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [filterDepartureDateFrom, setFilterDepartureDateFrom] = useState('');
+  const [filterDepartureDateTo, setFilterDepartureDateTo] = useState('');
+  const [sortBy, setSortBy] = useState<'departureDate' | 'date' | 'status' | 'requester'>('departureDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const statusConfig = {
     [RequestStatus.Pending]: { 
@@ -607,11 +607,13 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
     // Filtro por estado
     const matchesStatus = filterStatus === 'all' || request.status === filterStatus;
 
-    // Filtro por rango de fechas
-    const matchesDateFrom = filterDateFrom === '' || request.date >= filterDateFrom;
-    const matchesDateTo = filterDateTo === '' || request.date <= filterDateTo;
+    // Filtro por rango de fechas DE SALIDA (departureDate) - FILTRO PRINCIPAL
+    const matchesDepartureDateFrom = filterDepartureDateFrom === '' || 
+      (request.departureDate && request.departureDate >= filterDepartureDateFrom);
+    const matchesDepartureDateTo = filterDepartureDateTo === '' || 
+      (request.departureDate && request.departureDate <= filterDepartureDateTo);
 
-    return matchesSearch && matchesStatus && matchesDateFrom && matchesDateTo;
+    return matchesSearch && matchesStatus && matchesDepartureDateFrom && matchesDepartureDateTo;
   });
 
   // Lógica de ordenamiento
@@ -619,6 +621,12 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
     let comparison = 0;
 
     switch (sortBy) {
+      case 'departureDate':
+        // Ordenar por fecha de salida (principal)
+        const dateA = a.departureDate || '';
+        const dateB = b.departureDate || '';
+        comparison = dateA.localeCompare(dateB);
+        break;
       case 'date':
         comparison = a.date.localeCompare(b.date);
         break;
@@ -637,10 +645,10 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
   const clearFilters = () => {
     setSearchTerm('');
     setFilterStatus('all');
-    setFilterDateFrom('');
-    setFilterDateTo('');
-    setSortBy('date');
-    setSortOrder('desc');
+    setFilterDepartureDateFrom('');
+    setFilterDepartureDateTo('');
+    setSortBy('departureDate');
+    setSortOrder('asc');
   };
 
   const getVehicleInfo = (vehicleId?: string) => {
@@ -655,6 +663,11 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
     return driver ? driver.name : 'Sin asignar';
   };
 
+  // Contar solicitudes pendientes de asignación
+  const pendingAssignments = filteredRequests.filter(r => 
+    r.status === RequestStatus.Approved && !r.vehicleId
+  ).length;
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -667,6 +680,11 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
                 <h2 className="text-2xl font-bold">Mis Solicitudes</h2>
                 <p className="text-sm text-teal-50 mt-1">
                   {sortedRequests.length} de {requests.length} solicitudes
+                  {pendingAssignments > 0 && (
+                    <span className="ml-2 px-2 py-0.5 bg-yellow-400 text-yellow-900 rounded-full text-xs font-semibold">
+                      {pendingAssignments} pendiente{pendingAssignments !== 1 ? 's' : ''} de asignar
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -711,27 +729,41 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
               </select>
             </div>
 
-            {/* Fecha Desde */}
+            {/* Fecha de Salida Desde */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Desde</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                <span className="flex items-center">
+                  <svg className="w-3 h-3 mr-1 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  Salida Desde
+                </span>
+              </label>
               <input
                 type="date"
-                value={filterDateFrom}
-                onChange={(e) => setFilterDateFrom(e.target.value)}
+                value={filterDepartureDateFrom}
+                onChange={(e) => setFilterDepartureDateFrom(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                title="Fecha inicial del filtro"
+                title="Fecha de salida inicial"
               />
             </div>
 
-            {/* Fecha Hasta */}
+            {/* Fecha de Salida Hasta */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Hasta</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                <span className="flex items-center">
+                  <svg className="w-3 h-3 mr-1 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  Salida Hasta
+                </span>
+              </label>
               <input
                 type="date"
-                value={filterDateTo}
-                onChange={(e) => setFilterDateTo(e.target.value)}
+                value={filterDepartureDateTo}
+                onChange={(e) => setFilterDepartureDateTo(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                title="Fecha final del filtro"
+                title="Fecha de salida final"
               />
             </div>
 
@@ -745,7 +777,8 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                   title="Campo de ordenamiento"
                 >
-                  <option value="date">Fecha</option>
+                  <option value="departureDate">Fecha de Salida</option>
+                  <option value="date">Fecha de Solicitud</option>
                   <option value="status">Estado</option>
                   <option value="requester">Solicitante</option>
                 </select>
@@ -766,7 +799,7 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-600">
-                {searchTerm || filterStatus !== 'all' || filterDateFrom || filterDateTo ? (
+                {searchTerm || filterStatus !== 'all' || filterDepartureDateFrom || filterDepartureDateTo ? (
                   <span className="font-medium text-teal-600">Filtros activos</span>
                 ) : (
                   <span>Sin filtros aplicados</span>
@@ -805,12 +838,16 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
             <div className="space-y-4">
               {sortedRequests.map((request) => {
                 const status = statusConfig[request.status];
+                const canAssign = request.status === RequestStatus.Approved && !request.vehicleId;
+                
                 return (
                   <div
                     key={request.id}
-                    className="border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                    onClick={() => onViewDetail(request)}
+                    className="border border-gray-200 rounded-lg hover:shadow-lg hover:border-teal-300 transition-all cursor-pointer bg-white"
                   >
                     <div className="p-6">
+                      {/* Header con nombre, estado y fecha de salida destacada */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center mb-2">
@@ -825,97 +862,118 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
                           <p className="text-sm text-gray-600 mb-1">
                             <span className="font-medium">Dependencia:</span> {request.department}
                           </p>
-                          {request.requesterEmail && (
-                            <p className="text-sm text-gray-600 mb-1">
-                              <span className="font-medium">Correo Solicitante:</span> {request.requesterEmail}
-                            </p>
-                          )}
-                          {request.departmentEmail && (
-                            <p className="text-sm text-gray-600">
-                              <span className="font-medium">Correo Dependencia:</span> {request.departmentEmail}
-                            </p>
-                          )}
                         </div>
-                        <div className="flex gap-2">
-                          {request.status === RequestStatus.Approved && !request.vehicleId && (
-                            <button
-                              onClick={() => onAssignVehicle(request)}
-                              className="px-4 py-2 text-sm bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors font-medium flex items-center"
-                            >
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        
+                        {/* Fecha de salida destacada */}
+                        {request.departureDate && (
+                          <div className="ml-4 bg-gradient-to-br from-teal-50 to-cyan-50 border-2 border-teal-200 rounded-lg p-3 text-center min-w-[140px]">
+                            <p className="text-xs text-teal-600 font-semibold mb-1 flex items-center justify-center">
+                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                               </svg>
-                              Asignar
-                            </button>
-                          )}
-                          <button
-                            onClick={() => onViewDetail(request)}
-                            className="px-4 py-2 text-sm bg-cyan-50 text-cyan-700 rounded-lg hover:bg-cyan-100 transition-colors font-medium"
-                          >
-                            Ver Detalles
-                          </button>
-                        </div>
+                              Fecha Salida
+                            </p>
+                            <p className="text-lg font-bold text-teal-700">{request.departureDate}</p>
+                          </div>
+                        )}
                       </div>
 
+                      {/* Información de ruta y pasajeros */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div className="flex items-start">
-                          <svg className="w-5 h-5 text-gray-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <div>
-                            <p className="text-xs text-gray-500">Fecha Solicitud</p>
-                            <p className="text-sm font-medium text-gray-800">{request.date}</p>
-                            {request.departureDate && (
-                              <>
-                                <p className="text-xs text-teal-600 font-semibold mt-1">🚗 Salida Programada</p>
-                                <p className="text-sm font-bold text-teal-700">{request.departureDate}</p>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-start">
-                          <svg className="w-5 h-5 text-gray-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
-                          <div>
-                            <p className="text-xs text-gray-500">Pasajeros</p>
-                            <p className="text-sm font-medium text-gray-800">{request.passengers}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start">
-                          <svg className="w-5 h-5 text-gray-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-cyan-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                           </svg>
+                          <div className="flex-1">
+                            <p className="text-xs text-gray-500 mb-0.5">Origen</p>
+                            <p className="text-sm font-medium text-gray-800 line-clamp-2">{request.origin}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start">
+                          <svg className="w-5 h-5 text-teal-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                          </svg>
+                          <div className="flex-1">
+                            <p className="text-xs text-gray-500 mb-0.5">Destino</p>
+                            <p className="text-sm font-medium text-gray-800 line-clamp-2">{request.destination}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-start">
+                          <svg className="w-5 h-5 text-indigo-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
                           <div>
-                            <p className="text-xs text-gray-500">Destino</p>
-                            <p className="text-sm font-medium text-gray-800 truncate max-w-xs">{request.destination}</p>
+                            <p className="text-xs text-gray-500 mb-0.5">Pasajeros</p>
+                            <p className="text-sm font-medium text-gray-800">{request.passengers} persona{request.passengers !== 1 ? 's' : ''}</p>
                           </div>
                         </div>
                       </div>
 
+                      {/* Asignaciones (si existen) */}
                       {(request.vehicleId || request.driverId) && (
-                        <div className="border-t pt-4 mt-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="flex items-center bg-gray-50 rounded-lg p-3">
-                              <Car className="w-5 h-5 text-gray-500 mr-3" />
+                        <div className="border-t border-gray-200 pt-4 mt-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="flex items-center bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-3">
+                              <Car className="w-5 h-5 text-blue-600 mr-3 flex-shrink-0" />
                               <div>
-                                <p className="text-xs text-gray-500">Vehículo Asignado</p>
+                                <p className="text-xs text-blue-600 font-semibold">Vehículo Asignado</p>
                                 <p className="text-sm font-medium text-gray-800">{getVehicleInfo(request.vehicleId)}</p>
                               </div>
                             </div>
-                            <div className="flex items-center bg-gray-50 rounded-lg p-3">
-                              <svg className="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-center bg-gradient-to-r from-green-50 to-teal-50 border border-green-200 rounded-lg p-3">
+                              <svg className="w-5 h-5 text-green-600 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                               </svg>
                               <div>
-                                <p className="text-xs text-gray-500">Conductor Asignado</p>
+                                <p className="text-xs text-green-600 font-semibold">Conductor Asignado</p>
                                 <p className="text-sm font-medium text-gray-800">{getDriverInfo(request.driverId)}</p>
                               </div>
                             </div>
                           </div>
                         </div>
                       )}
+
+                      {/* Footer con botones de acción */}
+                      <div className="border-t border-gray-100 pt-4 mt-4 flex items-center justify-between">
+                        <div className="text-xs text-gray-500">
+                          <span className="flex items-center">
+                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Solicitado: {request.date}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                          {canAssign && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onAssignVehicle(request);
+                              }}
+                              className="px-4 py-2 text-sm bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg hover:from-green-600 hover:to-teal-600 transition-all font-semibold flex items-center shadow-md hover:shadow-lg"
+                            >
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                              </svg>
+                              Asignar Vehículo y Conductor
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onViewDetail(request);
+                            }}
+                            className="px-4 py-2 text-sm bg-white border border-cyan-300 text-cyan-700 rounded-lg hover:bg-cyan-50 transition-colors font-medium flex items-center"
+                          >
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            Ver Detalles
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 );
