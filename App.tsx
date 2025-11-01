@@ -12,7 +12,7 @@ import { drivers as initialDrivers, vehicles as initialVehicles, requests as ini
 import { Driver, Vehicle, TransportRequest, Survey, MaintenanceRecord } from './types';
 import { loadDrivers, loadVehicles, loadRequests, loadSurveys, loadMaintenance, saveDrivers, saveVehicles, saveRequests, saveSurveys, saveMaintenance } from './services/storageService';
 
-type View = 'dashboard' | 'requests' | 'vehicles' | 'drivers' | 'surveys' | 'reports' | 'admin' | 'management' | 'vehicleRequest' | 'maintenance';
+type View = 'dashboard' | 'requests' | 'vehicles' | 'drivers' | 'surveys' | 'reports' | 'admin' | 'management' | 'maintenance';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('dashboard');
@@ -55,8 +55,6 @@ const App: React.FC = () => {
     switch (currentView) {
       case 'dashboard':
         return <Dashboard {...allData} />;
-      case 'vehicleRequest':
-        return <VehicleRequest requests={requests} setRequests={setRequests} vehicles={vehicles} setVehicles={setVehicles} drivers={drivers} setDrivers={setDrivers} />;
       case 'requests':
         return <VehicleRequest requests={requests} setRequests={setRequests} vehicles={vehicles} setVehicles={setVehicles} drivers={drivers} setDrivers={setDrivers} />;
       case 'vehicles':

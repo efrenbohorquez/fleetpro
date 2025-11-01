@@ -45,7 +45,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isSideba
 
   const navItems = [
     { view: 'dashboard' as View, label: 'Dashboard', icon: <DashboardIcon className="w-6 h-6" /> },
-    { view: 'vehicleRequest' as View, label: 'Solicitud', icon: <Car className="w-6 h-6" /> },
     { view: 'requests' as View, label: 'Solicitudes', icon: <RequestsIcon className="w-6 h-6" /> },
     { view: 'vehicles' as View, label: 'Vehículos', icon: <VehiclesIcon className="w-6 h-6" /> },
     { view: 'drivers' as View, label: 'Conductores', icon: <DriversIcon className="w-6 h-6" /> },
