@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   server: {
     port: 5173,
-    host: true,
+    host: '0.0.0.0', // Escuchar en todas las interfaces de red
     strictPort: false,
     open: true,
     hmr: {

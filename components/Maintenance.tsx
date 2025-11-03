@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MaintenanceRecord, MaintenanceType, MaintenanceStatus, Vehicle } from '../types';
 import { Modal } from './common/Modal';
 import { Car } from './icons';
+import VehicleDetailModal from './VehicleDetailModal';
 
 interface MaintenanceProps {
   maintenance: MaintenanceRecord[];
@@ -18,6 +19,8 @@ const Maintenance: React.FC<MaintenanceProps> = ({ maintenance, setMaintenance, 
   const [filterType, setFilterType] = useState<MaintenanceType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<MaintenanceStatus | 'all'>('all');
   const [filterVehicle, setFilterVehicle] = useState<string>('all');
+  const [showVehicleDetail, setShowVehicleDetail] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
   // Formulario
   const [formData, setFormData] = useState<Partial<MaintenanceRecord>>({
@@ -103,6 +106,14 @@ const Maintenance: React.FC<MaintenanceProps> = ({ maintenance, setMaintenance, 
   const getVehicleInfo = (vehicleId: string) => {
     const vehicle = vehicles.find(v => v.id === vehicleId);
     return vehicle ? `${vehicle.model} - ${vehicle.plate}` : 'Desconocido';
+  };
+
+  const handleViewVehicleDetail = (vehicleId: string) => {
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    if (vehicle) {
+      setSelectedVehicle(vehicle);
+      setShowVehicleDetail(true);
+    }
   };
 
   // Filtrado
@@ -256,8 +267,20 @@ const Maintenance: React.FC<MaintenanceProps> = ({ maintenance, setMaintenance, 
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center flex-1">
                     <Car className="w-8 h-8 text-blue-600 mr-3" />
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800">{getVehicleInfo(record.vehicleId)}</h3>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold text-gray-800">{getVehicleInfo(record.vehicleId)}</h3>
+                        <button
+                          onClick={() => handleViewVehicleDetail(record.vehicleId)}
+                          className="px-3 py-1 text-xs bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors font-medium flex items-center gap-1"
+                          title="Ver hoja de vida completa del vehículo"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Hoja de Vida
+                        </button>
+                      </div>
                       <p className="text-sm text-gray-600">{record.description}</p>
                     </div>
                   </div>
@@ -535,6 +558,18 @@ const Maintenance: React.FC<MaintenanceProps> = ({ maintenance, setMaintenance, 
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Modal de Hoja de Vida del Vehículo */}
+      {showVehicleDetail && selectedVehicle && (
+        <VehicleDetailModal
+          vehicle={selectedVehicle}
+          isOpen={showVehicleDetail}
+          onClose={() => {
+            setShowVehicleDetail(false);
+            setSelectedVehicle(null);
+          }}
+        />
       )}
     </div>
   );

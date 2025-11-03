@@ -2,7 +2,7 @@
 import React from 'react';
 import { DashboardIcon, RequestsIcon, VehiclesIcon, DriversIcon, SurveysIcon, Settings, FileText, Car, Wrench } from './icons';
 
-type View = 'dashboard' | 'requests' | 'vehicles' | 'drivers' | 'surveys' | 'reports' | 'admin' | 'management' | 'vehicleRequest' | 'maintenance';
+type View = 'dashboard' | 'requests' | 'history' | 'vehicles' | 'drivers' | 'surveys' | 'reports' | 'admin' | 'management' | 'vehicleRequest' | 'maintenance';
 
 interface SidebarProps {
   currentView: View;
@@ -45,7 +45,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isSideba
 
   const navItems = [
     { view: 'dashboard' as View, label: 'Dashboard', icon: <DashboardIcon className="w-6 h-6" /> },
-    { view: 'requests' as View, label: 'Solicitudes', icon: <RequestsIcon className="w-6 h-6" /> },
+    { view: 'requests' as View, label: 'Solicitudes Activas', icon: <RequestsIcon className="w-6 h-6" /> },
+    { view: 'history' as View, label: 'Historial', icon: <FileText className="w-6 h-6" /> },
     { view: 'vehicles' as View, label: 'Vehículos', icon: <VehiclesIcon className="w-6 h-6" /> },
     { view: 'drivers' as View, label: 'Conductores', icon: <DriversIcon className="w-6 h-6" /> },
     { view: 'maintenance' as View, label: 'Mantenimiento', icon: <Wrench className="w-6 h-6" /> },

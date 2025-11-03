@@ -100,6 +100,38 @@ export const saveRequests = (requests: TransportRequest[]): boolean =>
 export const loadRequests = (): TransportRequest[] | null => 
   loadFromStorage<TransportRequest[]>(STORAGE_KEYS.REQUESTS);
 
+// ==================== REQUESTS HISTORY ====================
+export const saveRequestsHistory = (history: TransportRequest[]): boolean => 
+  saveToStorage('fleet_requests_history', history);
+
+export const loadRequestsHistory = (): TransportRequest[] | null => 
+  loadFromStorage<TransportRequest[]>('fleet_requests_history');
+
+/**
+ * Archiva una solicitud completada o cancelada al historial
+ * @param request - Solicitud a archivar
+ */
+export const archiveRequest = (request: TransportRequest): boolean => {
+  try {
+    const history = loadRequestsHistory() || [];
+    
+    // Evitar duplicados
+    const exists = history.find(r => r.id === request.id);
+    if (!exists) {
+      const archivedRequest = {
+        ...request,
+        archivedDate: new Date().toISOString()
+      };
+      history.push(archivedRequest as TransportRequest);
+      return saveRequestsHistory(history);
+    }
+    return true;
+  } catch (error) {
+    console.error('Error archivando solicitud:', error);
+    return false;
+  }
+};
+
 // ==================== SURVEYS ====================
 export const saveSurveys = (surveys: Survey[]): boolean => 
   saveToStorage(STORAGE_KEYS.SURVEYS, surveys);

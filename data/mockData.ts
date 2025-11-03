@@ -7,6 +7,7 @@ export const drivers: Driver[] = [
     "name": "CARLOS SANTIAGO QUIJANO BAUTISTA",
     "licenseNumber": "L1000000",
     "contact": "555-1000",
+    "email": "carlos.quijano@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {
@@ -14,6 +15,7 @@ export const drivers: Driver[] = [
     "name": "NESTOR AURELIO CASTAÑEDA HERNANDEZ",
     "licenseNumber": "L1000001",
     "contact": "311 2890277",
+    "email": "nestor.castaneda@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {
@@ -21,6 +23,7 @@ export const drivers: Driver[] = [
     "name": "LUIS FERNANDO MANTILLA REY",
     "licenseNumber": "L1000002",
     "contact": "555-1002",
+    "email": "luis.mantilla@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {
@@ -28,6 +31,7 @@ export const drivers: Driver[] = [
     "name": "RONALD ISRAEL HERREÑO SUAREZ",
     "licenseNumber": "L1000003",
     "contact": "314 3909733",
+    "email": "ronald.herreno@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {
@@ -35,6 +39,7 @@ export const drivers: Driver[] = [
     "name": "GERARDO ENCISO TIERRADENTRO",
     "licenseNumber": "L1000004",
     "contact": "312 7875167",
+    "email": "gerardo.enciso@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {
@@ -42,6 +47,7 @@ export const drivers: Driver[] = [
     "name": "CARLOS ALFONSO LOPEZ RODRIGUEZ",
     "licenseNumber": "L1000005",
     "contact": "311 2692534",
+    "email": "carlos.lopez@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {
@@ -49,6 +55,7 @@ export const drivers: Driver[] = [
     "name": "MARTIN MOLANO ORTIZ",
     "licenseNumber": "L1000006",
     "contact": "320 8543171",
+    "email": "martin.molano@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {
@@ -56,6 +63,7 @@ export const drivers: Driver[] = [
     "name": "MAURICIO VICENTE RAMIREZ AVILA",
     "licenseNumber": "L1000007",
     "contact": "313 4940922",
+    "email": "mauricio.ramirez@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {
@@ -63,6 +71,7 @@ export const drivers: Driver[] = [
     "name": "JORGE WILLIAM DIAZ BELTRAN",
     "licenseNumber": "L1000008",
     "contact": "310 2524992",
+    "email": "jorge.diaz@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {
@@ -70,6 +79,7 @@ export const drivers: Driver[] = [
     "name": "JORGE ENRIQUE URREGO URREGO",
     "licenseNumber": "L1000009",
     "contact": "313 2843656",
+    "email": "jorge.urrego@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {
@@ -77,6 +87,7 @@ export const drivers: Driver[] = [
     "name": "JORGE ANDRES ROJAS VILLAMIL",
     "licenseNumber": "L1000010",
     "contact": "310 2462980",
+    "email": "jorge.rojas@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {
@@ -84,6 +95,7 @@ export const drivers: Driver[] = [
     "name": "FERNANDO GOMEZ GUTIERREZ",
     "licenseNumber": "L1000011",
     "contact": "555-1011",
+    "email": "fernando.gomez@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {
@@ -91,6 +103,7 @@ export const drivers: Driver[] = [
     "name": "JORGE ANDRES DURAN ARIAS",
     "licenseNumber": "L1000012",
     "contact": "314 2795685",
+    "email": "jorge.duran@personeria.gov.co",
     "status": DriverStatus.Available
   },
   {

@@ -7,16 +7,27 @@ import Drivers from './components/Drivers';
 import Surveys from './components/Surveys';
 import AdminManagement from './components/AdminManagement';
 import VehicleRequest from './components/VehicleRequest';
+import RequestHistory from './components/RequestHistory';
 import Maintenance from './components/Maintenance';
 import { drivers as initialDrivers, vehicles as initialVehicles, requests as initialRequests, surveys as initialSurveys, maintenance as initialMaintenance } from './data/mockData';
 import { Driver, Vehicle, TransportRequest, Survey, MaintenanceRecord } from './types';
 import { loadDrivers, loadVehicles, loadRequests, loadSurveys, loadMaintenance, saveDrivers, saveVehicles, saveRequests, saveSurveys, saveMaintenance } from './services/storageService';
 
-type View = 'dashboard' | 'requests' | 'vehicles' | 'drivers' | 'surveys' | 'reports' | 'admin' | 'management' | 'maintenance';
+type View = 'dashboard' | 'requests' | 'history' | 'vehicles' | 'drivers' | 'surveys' | 'reports' | 'admin' | 'management' | 'maintenance';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [isSidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Log para verificar qué se carga desde localStorage
+  const loadedDrivers = loadDrivers();
+  console.log('🔍 App.tsx - Cargando desde localStorage:', loadedDrivers ? loadedDrivers.length : 'NULL', 'conductores');
+  if (loadedDrivers) {
+    console.log('👥 Conductores cargados:', loadedDrivers.map(d => d.name));
+  } else {
+    console.log('⚠️ No hay datos en localStorage, usando datos iniciales (mockData)');
+  }
+  
   const [drivers, setDrivers] = useState<Driver[]>(() => loadDrivers() || initialDrivers);
   const [vehicles, setVehicles] = useState<Vehicle[]>(() => loadVehicles() || initialVehicles);
   const [requests, setRequests] = useState<TransportRequest[]>(() => loadRequests() || initialRequests);
@@ -24,6 +35,8 @@ const App: React.FC = () => {
   const [maintenance, setMaintenance] = useState<MaintenanceRecord[]>(() => loadMaintenance() || initialMaintenance);
 
   useEffect(() => {
+    console.log('💾 App.tsx - Guardando conductores en localStorage:', drivers.length, 'conductores');
+    console.log('👥 Nombres:', drivers.map(d => d.name));
     saveDrivers(drivers);
   }, [drivers]);
 
@@ -57,6 +70,8 @@ const App: React.FC = () => {
         return <Dashboard {...allData} />;
       case 'requests':
         return <VehicleRequest requests={requests} setRequests={setRequests} vehicles={vehicles} setVehicles={setVehicles} drivers={drivers} setDrivers={setDrivers} />;
+      case 'history':
+        return <RequestHistory vehicles={vehicles} drivers={drivers} />;
       case 'vehicles':
         return <Vehicles vehicles={vehicles} setVehicles={setVehicles} />;
       case 'drivers':

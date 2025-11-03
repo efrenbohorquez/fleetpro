@@ -10,6 +10,7 @@ import {
   notifyCancellation,
   notifyCompletion 
 } from '../services/notificationService';
+import { archiveRequest } from '../services/storageService';
 
 interface VehicleRequestProps {
   requests: TransportRequest[];
@@ -43,9 +44,6 @@ const VehicleRequest: React.FC<VehicleRequestProps> = ({ requests, setRequests, 
     vehicleId: string,
     driverId: string
   ) => {
-    // Actualizar la solicitud
-    setRequests(prev => prev.map(r => r.id === updatedRequest.id ? updatedRequest : r));
-
     // Actualizar estado del vehículo a "En Uso"
     setVehicles(prev => prev.map(v => 
       v.id === vehicleId ? { ...v, status: VehicleStatus.InUse } : v
@@ -64,6 +62,12 @@ const VehicleRequest: React.FC<VehicleRequestProps> = ({ requests, setRequests, 
       notifyRequesterAssignment(updatedRequest, vehicle, driver);
       notifyDriverAssignment(updatedRequest, driver);
     }
+
+    // Archivar solicitud completa
+    archiveRequest(updatedRequest);
+    
+    // Remover de solicitudes activas
+    setRequests(prev => prev.filter(r => r.id !== updatedRequest.id));
 
     setShowAssignModal(false);
     setSelectedRequest(null);
@@ -115,6 +119,9 @@ const VehicleRequest: React.FC<VehicleRequestProps> = ({ requests, setRequests, 
           request={selectedRequest}
           vehicles={vehicles}
           drivers={drivers}
+          setRequests={setRequests}
+          setVehicles={setVehicles}
+          setDrivers={setDrivers}
           onClose={() => {
             setShowDetailModal(false);
             setSelectedRequest(null);
@@ -238,6 +245,8 @@ const NewRequestView: React.FC<NewRequestViewProps> = ({ requests, setRequests, 
         origin: formData.origin,
         destination: formData.destination,
         passengers: formData.passengers,
+        purpose: formData.purpose,
+        observations: formData.observations,
         status: RequestStatus.Pending,
       };
 
@@ -559,9 +568,8 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
   onViewDetail,
   onAssignVehicle
 }) => {
-  // Estados para filtros
+  // Estados para filtros (solo búsqueda y fecha para solicitudes pendientes)
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState<RequestStatus | 'all'>('all');
   const [filterDepartureDateFrom, setFilterDepartureDateFrom] = useState('');
   const [filterDepartureDateTo, setFilterDepartureDateTo] = useState('');
   const [sortBy, setSortBy] = useState<'departureDate' | 'date' | 'status' | 'requester'>('departureDate');
@@ -595,8 +603,12 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
     },
   };
 
-  // Lógica de filtrado
+  // Lógica de filtrado - SOLO SOLICITUDES PENDIENTES (sin asignar)
+  // Las aprobadas y rechazadas se muestran exclusivamente en el Historial
   const filteredRequests = requests.filter(request => {
+    // FILTRO BASE: Solo solicitudes pendientes (excluir aprobadas, rechazadas, completadas, canceladas)
+    const isPending = request.status === RequestStatus.Pending;
+    
     // Filtro por búsqueda (nombre, departamento, destino)
     const matchesSearch = searchTerm === '' || 
       request.requester.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -604,16 +616,13 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
       request.destination.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.origin.toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Filtro por estado
-    const matchesStatus = filterStatus === 'all' || request.status === filterStatus;
-
     // Filtro por rango de fechas DE SALIDA (departureDate) - FILTRO PRINCIPAL
     const matchesDepartureDateFrom = filterDepartureDateFrom === '' || 
       (request.departureDate && request.departureDate >= filterDepartureDateFrom);
     const matchesDepartureDateTo = filterDepartureDateTo === '' || 
       (request.departureDate && request.departureDate <= filterDepartureDateTo);
 
-    return matchesSearch && matchesStatus && matchesDepartureDateFrom && matchesDepartureDateTo;
+    return isPending && matchesSearch && matchesDepartureDateFrom && matchesDepartureDateTo;
   });
 
   // Lógica de ordenamiento
@@ -644,7 +653,6 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
   // Limpiar filtros
   const clearFilters = () => {
     setSearchTerm('');
-    setFilterStatus('all');
     setFilterDepartureDateFrom('');
     setFilterDepartureDateTo('');
     setSortBy('departureDate');
@@ -663,11 +671,6 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
     return driver ? driver.name : 'Sin asignar';
   };
 
-  // Contar solicitudes pendientes de asignación
-  const pendingAssignments = filteredRequests.filter(r => 
-    r.status === RequestStatus.Approved && !r.vehicleId
-  ).length;
-
   return (
     <div className="max-w-6xl mx-auto">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -677,14 +680,12 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
             <div className="flex items-center">
               <ClipboardList className="w-8 h-8 mr-3" />
               <div>
-                <h2 className="text-2xl font-bold">Mis Solicitudes</h2>
+                <h2 className="text-2xl font-bold">Solicitudes Pendientes</h2>
                 <p className="text-sm text-teal-50 mt-1">
-                  {sortedRequests.length} de {requests.length} solicitudes
-                  {pendingAssignments > 0 && (
-                    <span className="ml-2 px-2 py-0.5 bg-yellow-400 text-yellow-900 rounded-full text-xs font-semibold">
-                      {pendingAssignments} pendiente{pendingAssignments !== 1 ? 's' : ''} de asignar
-                    </span>
-                  )}
+                  {sortedRequests.length} solicitud{sortedRequests.length !== 1 ? 'es' : ''} sin asignar
+                  <span className="ml-2 text-xs opacity-75">
+                    (Las solicitudes aprobadas/rechazadas están en Historial)
+                  </span>
                 </p>
               </div>
             </div>
@@ -709,26 +710,8 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
             </div>
           </div>
 
-          {/* Filtros avanzados */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            {/* Filtro por Estado */}
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Estado</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as RequestStatus | 'all')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
-                title="Filtrar por estado de solicitud"
-              >
-                <option value="all">Todos los estados</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Aprobada">Aprobada</option>
-                <option value="En Progreso">En Progreso</option>
-                <option value="Completada">Completada</option>
-                <option value="Cancelada">Cancelada</option>
-              </select>
-            </div>
-
+          {/* Filtros avanzados - Solo filtros de fecha (solicitudes pendientes por defecto) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             {/* Fecha de Salida Desde */}
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -773,12 +756,12 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
               <div className="flex space-x-2">
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as 'date' | 'status' | 'requester')}
+                  onChange={(e) => setSortBy(e.target.value as 'departureDate' | 'date' | 'status' | 'requester')}
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                   title="Campo de ordenamiento"
                 >
                   <option value="departureDate">Fecha de Salida</option>
-                  <option value="date">Fecha de Solicitud</option>
+                  <option value="date">Fecha de Creación</option>
                   <option value="status">Estado</option>
                   <option value="requester">Solicitante</option>
                 </select>
@@ -799,7 +782,7 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-600">
-                {searchTerm || filterStatus !== 'all' || filterDepartureDateFrom || filterDepartureDateTo ? (
+                {searchTerm || filterDepartureDateFrom || filterDepartureDateTo ? (
                   <span className="font-medium text-teal-600">Filtros activos</span>
                 ) : (
                   <span>Sin filtros aplicados</span>
@@ -847,7 +830,7 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
                     className="border border-gray-200 rounded-lg hover:shadow-lg hover:border-teal-300 transition-all cursor-pointer bg-white"
                   >
                     <div className="p-6">
-                      {/* Header con nombre, estado y fecha de salida destacada */}
+                      {/* Header con nombre, estado y fechas destacadas */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center mb-2">
@@ -864,18 +847,32 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
                           </p>
                         </div>
                         
-                        {/* Fecha de salida destacada */}
-                        {request.departureDate && (
-                          <div className="ml-4 bg-gradient-to-br from-teal-50 to-cyan-50 border-2 border-teal-200 rounded-lg p-3 text-center min-w-[140px]">
-                            <p className="text-xs text-teal-600 font-semibold mb-1 flex items-center justify-center">
-                              <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                        {/* Fechas destacadas */}
+                        <div className="ml-4 flex gap-3">
+                          {/* Fecha de creación */}
+                          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-lg p-3 text-center min-w-[140px]">
+                            <p className="text-xs text-purple-600 font-semibold mb-1 flex items-center justify-center">
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                               </svg>
-                              Fecha Salida
+                              Creada
                             </p>
-                            <p className="text-lg font-bold text-teal-700">{request.departureDate}</p>
+                            <p className="text-sm font-bold text-purple-700">{request.date}</p>
                           </div>
-                        )}
+                          
+                          {/* Fecha de salida */}
+                          {request.departureDate && (
+                            <div className="bg-gradient-to-br from-teal-50 to-cyan-50 border-2 border-teal-200 rounded-lg p-3 text-center min-w-[140px]">
+                              <p className="text-xs text-teal-600 font-semibold mb-1 flex items-center justify-center">
+                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                </svg>
+                                Salida
+                              </p>
+                              <p className="text-sm font-bold text-teal-700">{request.departureDate}</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Información de ruta y pasajeros */}
@@ -935,15 +932,7 @@ const ViewRequestsView: React.FC<ViewRequestsViewProps> = ({
                       )}
 
                       {/* Footer con botones de acción */}
-                      <div className="border-t border-gray-100 pt-4 mt-4 flex items-center justify-between">
-                        <div className="text-xs text-gray-500">
-                          <span className="flex items-center">
-                            <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            Solicitado: {request.date}
-                          </span>
-                        </div>
+                      <div className="border-t border-gray-100 pt-4 mt-4 flex items-center justify-end">
                         <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                           {canAssign && (
                             <button
@@ -991,10 +980,21 @@ interface RequestDetailModalProps {
   request: TransportRequest;
   vehicles: Vehicle[];
   drivers: Driver[];
+  setRequests: React.Dispatch<React.SetStateAction<TransportRequest[]>>;
+  setVehicles: React.Dispatch<React.SetStateAction<Vehicle[]>>;
+  setDrivers: React.Dispatch<React.SetStateAction<Driver[]>>;
   onClose: () => void;
 }
 
-const RequestDetailModal: React.FC<RequestDetailModalProps> = ({ isOpen, request, vehicles, drivers, onClose }) => {
+const RequestDetailModal: React.FC<RequestDetailModalProps> = ({ 
+  isOpen, request, vehicles, drivers, setRequests, setVehicles, setDrivers, onClose 
+}) => {
+  const [selectedVehicleId, setSelectedVehicleId] = useState(request.vehicleId || '');
+  const [selectedDriverId, setSelectedDriverId] = useState(request.driverId || '');
+
+  const availableVehicles = vehicles.filter(v => v.status === VehicleStatus.Available || v.id === request.vehicleId);
+  const availableDrivers = drivers.filter(d => d.status === DriverStatus.Available || d.id === request.driverId);
+
   const getVehicleInfo = (vehicleId?: string) => {
     if (!vehicleId || !vehicles) return 'Sin asignar';
     const vehicle = vehicles.find(v => v.id === vehicleId);
@@ -1005,6 +1005,74 @@ const RequestDetailModal: React.FC<RequestDetailModalProps> = ({ isOpen, request
     if (!driverId || !drivers) return 'Sin asignar';
     const driver = drivers.find(d => d.id === driverId);
     return driver ? driver.name : 'Sin asignar';
+  };
+
+  const handleApprove = () => {
+    const updatedRequest = {
+      ...request,
+      status: RequestStatus.Approved,
+      vehicleId: selectedVehicleId || request.vehicleId,
+      driverId: selectedDriverId || request.driverId
+    };
+
+    setRequests(prev => prev.map(r => {
+      if (r.id === request.id) {
+        return updatedRequest;
+      }
+      return r;
+    }));
+
+    // Actualizar estado del vehículo si se asignó
+    if (selectedVehicleId) {
+      setVehicles(prev => prev.map(v => 
+        v.id === selectedVehicleId ? { ...v, status: VehicleStatus.InUse } : v
+      ));
+    }
+
+    // Actualizar estado del conductor si se asignó
+    if (selectedDriverId) {
+      setDrivers(prev => prev.map(d => 
+        d.id === selectedDriverId ? { ...d, status: DriverStatus.OnTrip } : d
+      ));
+    }
+
+    // Enviar notificaciones
+    if (selectedVehicleId && selectedDriverId) {
+      const vehicle = vehicles.find(v => v.id === selectedVehicleId);
+      const driver = drivers.find(d => d.id === selectedDriverId);
+      
+      if (vehicle && driver) {
+        notifyRequesterAssignment(updatedRequest, vehicle, driver);
+        notifyDriverAssignment(updatedRequest, driver);
+      }
+    }
+
+    // Archivar automáticamente si tiene vehículo y conductor asignados
+    if (selectedVehicleId && selectedDriverId) {
+      archiveRequest(updatedRequest);
+      // Remover de solicitudes activas
+      setRequests(prev => prev.filter(r => r.id !== request.id));
+      alert('✅ Solicitud aprobada y asignada. Se ha movido al historial.');
+    } else {
+      alert('✅ Solicitud aprobada exitosamente');
+    }
+
+    onClose();
+  };
+
+  const handleReject = () => {
+    if (confirm('¿Está seguro de rechazar esta solicitud?')) {
+      const rejectedRequest = { ...request, status: RequestStatus.Canceled };
+      
+      // Archivar solicitud rechazada
+      archiveRequest(rejectedRequest);
+      
+      // Remover de solicitudes activas
+      setRequests(prev => prev.filter(r => r.id !== request.id));
+      
+      alert('❌ Solicitud rechazada y movida al historial');
+      onClose();
+    }
   };
 
   return (
@@ -1048,22 +1116,78 @@ const RequestDetailModal: React.FC<RequestDetailModalProps> = ({ isOpen, request
             <p className="text-sm font-medium text-gray-500">Origen</p>
             <p className="text-base text-gray-900">{request.origin}</p>
           </div>
-          <div>
+          <div className="mb-3">
             <p className="text-sm font-medium text-gray-500">Destino</p>
             <p className="text-base text-gray-900">{request.destination}</p>
           </div>
+          <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+            <p className="text-sm font-medium text-yellow-700 mb-1">📝 Motivo del Viaje</p>
+            <p className="text-base font-bold text-gray-900">{request.purpose || 'No especificado'}</p>
+          </div>
         </div>
 
-        <div className="border-t pt-4">
-          <div className="mb-3">
-            <p className="text-sm font-medium text-gray-500">Vehículo</p>
-            <p className="text-base text-gray-900">{getVehicleInfo(request.vehicleId)}</p>
+        {/* Asignación de Vehículo y Conductor */}
+        {request.status === RequestStatus.Pending && (
+          <div className="border-t pt-4 bg-blue-50 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-blue-900 mb-4">🚗 Asignar Vehículo y Conductor</h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar Vehículo
+              </label>
+              <select
+                value={selectedVehicleId}
+                onChange={(e) => setSelectedVehicleId(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Sin asignar</option>
+                {availableVehicles.map(vehicle => (
+                  <option key={vehicle.id} value={vehicle.id}>
+                    {vehicle.make} {vehicle.model} - {vehicle.plate} ({vehicle.capacity} pasajeros)
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Vehículos disponibles: {availableVehicles.length}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Seleccionar Conductor
+              </label>
+              <select
+                value={selectedDriverId}
+                onChange={(e) => setSelectedDriverId(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Sin asignar</option>
+                {availableDrivers.map(driver => (
+                  <option key={driver.id} value={driver.id}>
+                    {driver.name} - {driver.email || driver.contact}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Conductores disponibles: {availableDrivers.length}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-500">Conductor</p>
-            <p className="text-base text-gray-900">{getDriverInfo(request.driverId)}</p>
+        )}
+
+        {/* Información de Asignación (para solicitudes ya aprobadas) */}
+        {request.status !== RequestStatus.Pending && (
+          <div className="border-t pt-4">
+            <div className="mb-3">
+              <p className="text-sm font-medium text-gray-500">Vehículo</p>
+              <p className="text-base text-gray-900">{getVehicleInfo(request.vehicleId)}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Conductor</p>
+              <p className="text-base text-gray-900">{getDriverInfo(request.driverId)}</p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="border-t pt-4">
           <p className="text-sm font-medium text-gray-500 mb-2">Estado</p>
@@ -1078,7 +1202,24 @@ const RequestDetailModal: React.FC<RequestDetailModalProps> = ({ isOpen, request
           </span>
         </div>
 
-        <div className="flex justify-end pt-4">
+        {/* Botones de Acción */}
+        <div className="flex justify-end gap-3 pt-4">
+          {request.status === RequestStatus.Pending && (
+            <>
+              <button
+                onClick={handleReject}
+                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+              >
+                ❌ Rechazar
+              </button>
+              <button
+                onClick={handleApprove}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
+              >
+                ✅ Aprobar
+              </button>
+            </>
+          )}
           <button
             onClick={onClose}
             className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
@@ -1269,8 +1410,13 @@ const AssignmentModal: React.FC<AssignmentModalProps> = ({
                 <div className="flex-1">
                   <p className="font-medium text-gray-800">{selectedDriverInfo.name}</p>
                   <p className="text-gray-600">
-                    📧 {selectedDriverInfo.contact} • Lic: {selectedDriverInfo.licenseNumber}
+                    � {selectedDriverInfo.contact} • Lic: {selectedDriverInfo.licenseNumber}
                   </p>
+                  {selectedDriverInfo.email && (
+                    <p className="text-blue-600 text-xs mt-1">
+                      📧 {selectedDriverInfo.email}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -1327,7 +1473,12 @@ Personería de Bogotá
                   ✉️ Email al Conductor:
                 </p>
                 <p className="text-blue-600 font-medium mb-2">
-                  {selectedDriverInfo?.contact}
+                  {selectedDriverInfo?.email || selectedDriverInfo?.contact}
+                  {!selectedDriverInfo?.email && (
+                    <span className="text-xs text-red-600 ml-2">
+                      ⚠️ Sin email - Se enviará por teléfono
+                    </span>
+                  )}
                 </p>
                 <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
                   <p className="font-semibold mb-1">Asunto: Nueva asignación de servicio</p>
@@ -1390,7 +1541,14 @@ Personería de Bogotá
                       <span className="mr-2 text-lg">📧</span>
                       <div>
                         <strong>Conductor:</strong><br/>
-                        <span className="text-blue-600 font-medium">{selectedDriverInfo?.contact}</span>
+                        <span className="text-blue-600 font-medium">
+                          {selectedDriverInfo?.email || selectedDriverInfo?.contact}
+                        </span>
+                        {!selectedDriverInfo?.email && (
+                          <span className="block text-xs text-amber-700 mt-1">
+                            ⚠️ El conductor no tiene email registrado. Configure uno en el módulo de Conductores.
+                          </span>
+                        )}
                       </div>
                     </li>
                   </ul>

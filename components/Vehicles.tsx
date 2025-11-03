@@ -254,46 +254,65 @@ interface VehicleFormModalProps {
 
 const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, vehicle, onSave, onClose }) => {
     const [formData, setFormData] = useState({
+        // Datos básicos
+        plate: '',
         make: '', 
         model: '', 
-        year: new Date().getFullYear(), 
-        plate: '', 
-        status: VehicleStatus.Available,
-        mileage: 0,
-        vin: '',
+        year: new Date().getFullYear(),
+        type: '',
+        bodyType: '',
         color: '',
-        fuelType: '',
-        capacity: 0,
+        
+        // Motor y mecánica
         engineNumber: '',
         chassisNumber: '',
+        cylinderCapacity: '',
+        serialNumber: '',
+        fuelType: '',
+        
+        // Capacidad
+        capacity: 0,
+        
+        // Documentación
+        transitLicense: '',
+        vin: '',
         owner: '',
         insuranceCompany: '',
         insurancePolicy: '',
         soatExpiry: '',
         techReviewExpiry: '',
+        
+        // Control interno
+        status: VehicleStatus.Available,
+        mileage: 0,
         historyFile: ''
     });
 
     useEffect(() => {
         if (vehicle) {
             setFormData({
+                plate: vehicle.plate,
                 make: vehicle.make,
                 model: vehicle.model,
                 year: vehicle.year,
-                plate: vehicle.plate,
-                status: vehicle.status,
-                mileage: vehicle.mileage || 0,
-                vin: vehicle.vin || '',
+                type: vehicle.type || '',
+                bodyType: vehicle.bodyType || '',
                 color: vehicle.color || '',
-                fuelType: vehicle.fuelType || '',
-                capacity: vehicle.capacity || 0,
                 engineNumber: vehicle.engineNumber || '',
                 chassisNumber: vehicle.chassisNumber || '',
+                cylinderCapacity: vehicle.cylinderCapacity || '',
+                serialNumber: vehicle.serialNumber || '',
+                fuelType: vehicle.fuelType || '',
+                capacity: vehicle.capacity || 0,
+                transitLicense: vehicle.transitLicense || '',
+                vin: vehicle.vin || '',
                 owner: vehicle.owner || '',
                 insuranceCompany: vehicle.insuranceCompany || '',
                 insurancePolicy: vehicle.insurancePolicy || '',
                 soatExpiry: vehicle.soatExpiry || '',
                 techReviewExpiry: vehicle.techReviewExpiry || '',
+                status: vehicle.status,
+                mileage: vehicle.mileage || 0,
                 historyFile: vehicle.historyFile || ''
             });
         }
@@ -314,71 +333,230 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, vehicle, on
 
     return (
         <Modal isOpen={isOpen} title={vehicle ? 'Editar Vehículo' : 'Crear Vehículo'} onClose={onClose}>
-            <form onSubmit={handleSubmit} className="max-h-[70vh] overflow-y-auto">
+            <form onSubmit={handleSubmit} className="max-h-[70vh] overflow-y-auto px-2">
+                {/* Sección 1: Identificación */}
                 <div className="mb-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3">🚗 Información Básica</h3>
+                    <h3 className="text-lg font-bold text-blue-900 mb-3 bg-blue-50 p-2 rounded">� Identificación del Vehículo</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Marca *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">PLACA *</label>
+                            <input 
+                                type="text" 
+                                name="plate" 
+                                value={formData.plate} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded uppercase font-bold" 
+                                placeholder="ABC123"
+                                required 
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">MARCA *</label>
                             <input 
                                 type="text" 
                                 name="make" 
                                 value={formData.make} 
                                 onChange={handleChange} 
                                 className="w-full p-2 border rounded" 
+                                placeholder="Toyota, Chevrolet, etc."
                                 required 
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Modelo *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">LÍNEA *</label>
                             <input 
                                 type="text" 
                                 name="model" 
                                 value={formData.model} 
                                 onChange={handleChange} 
                                 className="w-full p-2 border rounded" 
+                                placeholder="Prado, D-Max, etc."
                                 required 
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Año *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">TIPO</label>
+                            <input 
+                                type="text" 
+                                name="type" 
+                                value={formData.type} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded" 
+                                placeholder="Campero, Camioneta, etc."
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">AÑO *</label>
                             <input 
                                 type="number" 
                                 name="year" 
                                 value={formData.year} 
                                 onChange={handleChange} 
                                 className="w-full p-2 border rounded" 
+                                min="1900"
+                                max={new Date().getFullYear() + 1}
                                 required 
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Placa *</label>
-                            <input 
-                                type="text" 
-                                name="plate" 
-                                value={formData.plate} 
-                                onChange={handleChange} 
-                                className="w-full p-2 border rounded uppercase" 
-                                required 
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">COLOR</label>
                             <input 
                                 type="text" 
                                 name="color" 
                                 value={formData.color} 
                                 onChange={handleChange} 
                                 className="w-full p-2 border rounded" 
+                                placeholder="Blanco, Negro, etc."
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Estado *</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">TIPO CARROCERÍA</label>
+                            <input 
+                                type="text" 
+                                name="bodyType" 
+                                value={formData.bodyType} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded" 
+                                placeholder="Sedan, SUV, etc."
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">No. DE PASAJEROS</label>
+                            <input 
+                                type="number" 
+                                name="capacity" 
+                                value={formData.capacity} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded" 
+                                min="1"
+                                max="50"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sección 2: Especificaciones Técnicas */}
+                <div className="mb-6 pt-4 border-t">
+                    <h3 className="text-lg font-bold text-green-900 mb-3 bg-green-50 p-2 rounded">🔧 Especificaciones Técnicas</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">NÚMERO DE MOTOR</label>
+                            <input 
+                                type="text" 
+                                name="engineNumber" 
+                                value={formData.engineNumber} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded font-mono" 
+                                placeholder="ej: 1GR1234567"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">NÚMERO DE CHASIS</label>
+                            <input 
+                                type="text" 
+                                name="chassisNumber" 
+                                value={formData.chassisNumber} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded font-mono" 
+                                placeholder="ej: JT123456789"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">CILINDRAJE</label>
+                            <input 
+                                type="text" 
+                                name="cylinderCapacity" 
+                                value={formData.cylinderCapacity} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded" 
+                                placeholder="ej: 2700 cc"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">SERIE No.</label>
+                            <input 
+                                type="text" 
+                                name="serialNumber" 
+                                value={formData.serialNumber} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded font-mono" 
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">TIPO COMBUSTIBLE</label>
+                            <select 
+                                name="fuelType" 
+                                value={formData.fuelType} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded"
+                            >
+                                <option value="">Seleccionar...</option>
+                                <option value="Gasolina">Gasolina</option>
+                                <option value="Diesel">Diesel</option>
+                                <option value="Gas Natural">Gas Natural</option>
+                                <option value="Eléctrico">Eléctrico</option>
+                                <option value="Híbrido">Híbrido</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">KILOMETRAJE ACTUAL</label>
+                            <input 
+                                type="number" 
+                                name="mileage" 
+                                value={formData.mileage} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded" 
+                                min="0"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sección 3: Documentación */}
+                <div className="mb-6 pt-4 border-t">
+                    <h3 className="text-lg font-bold text-purple-900 mb-3 bg-purple-50 p-2 rounded">📄 Documentación Legal</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">LICENCIA TRÁNSITO No.</label>
+                            <input 
+                                type="text" 
+                                name="transitLicense" 
+                                value={formData.transitLicense} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded font-mono" 
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">VIN (Identificación Vehicular)</label>
+                            <input 
+                                type="text" 
+                                name="vin" 
+                                value={formData.vin} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded font-mono uppercase" 
+                                placeholder="17 caracteres"
+                                maxLength={17}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">PROPIETARIO</label>
+                            <input 
+                                type="text" 
+                                name="owner" 
+                                value={formData.owner} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded" 
+                                placeholder="Personería de Bogotá"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">ESTADO *</label>
                             <select 
                                 name="status" 
                                 value={formData.status} 
                                 onChange={handleChange} 
                                 className="w-full p-2 border rounded"
+                                required
                             >
                                 {Object.values(VehicleStatus).map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
@@ -386,69 +564,67 @@ const VehicleFormModal: React.FC<VehicleFormModalProps> = ({ isOpen, vehicle, on
                     </div>
                 </div>
 
+                {/* Sección 4: Seguros */}
                 <div className="mb-6 pt-4 border-t">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3">⚙️ Especificaciones Técnicas</h3>
+                    <h3 className="text-lg font-bold text-yellow-900 mb-3 bg-yellow-50 p-2 rounded">⚠️ Seguros y Vencimientos</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">VIN</label>
-                            <input type="text" name="vin" value={formData.vin} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <label className="block text-sm font-medium text-gray-700 mb-1">ASEGURADORA</label>
+                            <input 
+                                type="text" 
+                                name="insuranceCompany" 
+                                value={formData.insuranceCompany} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded" 
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Kilometraje</label>
-                            <input type="number" name="mileage" value={formData.mileage} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <label className="block text-sm font-medium text-gray-700 mb-1">PÓLIZA No.</label>
+                            <input 
+                                type="text" 
+                                name="insurancePolicy" 
+                                value={formData.insurancePolicy} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded font-mono" 
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Combustible</label>
-                            <input type="text" name="fuelType" value={formData.fuelType} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <label className="block text-sm font-medium text-gray-700 mb-1">VENCIMIENTO SOAT</label>
+                            <input 
+                                type="date" 
+                                name="soatExpiry" 
+                                value={formData.soatExpiry} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded" 
+                            />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Capacidad</label>
-                            <input type="number" name="capacity" value={formData.capacity} onChange={handleChange} className="w-full p-2 border rounded" />
+                            <label className="block text-sm font-medium text-gray-700 mb-1">VENCIMIENTO TECNOMECÁNICA</label>
+                            <input 
+                                type="date" 
+                                name="techReviewExpiry" 
+                                value={formData.techReviewExpiry} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded" 
+                            />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Número de Motor</label>
-                            <input type="text" name="engineNumber" value={formData.engineNumber} onChange={handleChange} className="w-full p-2 border rounded" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Número de Chasis</label>
-                            <input type="text" name="chassisNumber" value={formData.chassisNumber} onChange={handleChange} className="w-full p-2 border rounded" />
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">ARCHIVO HOJA DE VIDA (Excel)</label>
+                            <input 
+                                type="text" 
+                                name="historyFile" 
+                                value={formData.historyFile} 
+                                onChange={handleChange} 
+                                className="w-full p-2 border rounded text-sm" 
+                                placeholder="Ruta al archivo Excel"
+                            />
                         </div>
                     </div>
                 </div>
 
-                <div className="mb-6 pt-4 border-t">
-                    <h3 className="text-lg font-bold text-gray-900 mb-3">📄 Propiedad y Seguros</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Propietario</label>
-                            <input type="text" name="owner" value={formData.owner} onChange={handleChange} className="w-full p-2 border rounded" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Aseguradora</label>
-                            <input type="text" name="insuranceCompany" value={formData.insuranceCompany} onChange={handleChange} className="w-full p-2 border rounded" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Póliza</label>
-                            <input type="text" name="insurancePolicy" value={formData.insurancePolicy} onChange={handleChange} className="w-full p-2 border rounded" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">SOAT</label>
-                            <input type="date" name="soatExpiry" value={formData.soatExpiry} onChange={handleChange} className="w-full p-2 border rounded" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Revisión Técnica</label>
-                            <input type="date" name="techReviewExpiry" value={formData.techReviewExpiry} onChange={handleChange} className="w-full p-2 border rounded" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Archivo Hoja de Vida</label>
-                            <input type="text" name="historyFile" value={formData.historyFile} onChange={handleChange} className="w-full p-2 border rounded" />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-4 border-t">
-                    <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancelar</button>
-                    <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Guardar</button>
+                <div className="flex justify-end space-x-3 pt-4 border-t sticky bottom-0 bg-white">
+                    <button type="button" onClick={onClose} className="px-6 py-2 bg-gray-200 rounded hover:bg-gray-300 font-medium">Cancelar</button>
+                    <button type="submit" className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium">💾 Guardar</button>
                 </div>
             </form>
         </Modal>

@@ -56,8 +56,26 @@ const Drivers: React.FC<DriversProps> = ({ drivers, setDrivers }) => {
 
   const handleDelete = () => {
       if (selectedDriver) {
-          console.log('🗑️ Eliminando conductor:', selectedDriver.name);
-          setDrivers(drivers?.filter(d => d.id !== selectedDriver.id) || []);
+          console.log('🗑️ INICIO ELIMINACIÓN - Conductor:', selectedDriver.name, 'ID:', selectedDriver.id);
+          console.log('📊 Total conductores ANTES:', drivers?.length || 0);
+          
+          const updatedDrivers = drivers?.filter(d => d.id !== selectedDriver.id) || [];
+          
+          console.log('📊 Total conductores DESPUÉS:', updatedDrivers.length);
+          console.log('✅ Conductores filtrados:', updatedDrivers.map(d => d.name));
+          
+          setDrivers(updatedDrivers);
+          
+          // Verificar que se guardó en localStorage
+          setTimeout(() => {
+              const saved = localStorage.getItem('fleet_drivers');
+              if (saved) {
+                  const parsed = JSON.parse(saved);
+                  console.log('💾 VERIFICACIÓN localStorage - Total guardados:', parsed.length);
+                  console.log('💾 Nombres en localStorage:', parsed.map((d: Driver) => d.name));
+              }
+          }, 100);
+          
           setIsDeleteModalOpen(false);
           setSelectedDriver(null);
       }
@@ -248,7 +266,7 @@ interface DriverFormModalProps {
 
 const DriverFormModal: React.FC<DriverFormModalProps> = ({ driver, onSave, onClose, isOpen }) => {
     const [formData, setFormData] = useState({
-        name: '', licenseNumber: '', contact: '', status: DriverStatus.Available,
+        name: '', licenseNumber: '', contact: '', email: '', status: DriverStatus.Available,
     });
     const [errors, setErrors] = useState<{[key: string]: string}>({});
 
@@ -259,6 +277,7 @@ const DriverFormModal: React.FC<DriverFormModalProps> = ({ driver, onSave, onClo
                 name: driver.name,
                 licenseNumber: driver.licenseNumber,
                 contact: driver.contact,
+                email: driver.email || '',
                 status: driver.status,
             });
         } else if (!driver && isOpen) {
@@ -268,6 +287,7 @@ const DriverFormModal: React.FC<DriverFormModalProps> = ({ driver, onSave, onClo
                 name: '',
                 licenseNumber: '',
                 contact: '',
+                email: '',
                 status: DriverStatus.Available,
             });
             setErrors({});
@@ -299,6 +319,14 @@ const DriverFormModal: React.FC<DriverFormModalProps> = ({ driver, onSave, onClo
         // Validar contacto (mínimo 7 caracteres para números telefónicos)
         if (formData.contact.trim().length < 7) {
             newErrors.contact = 'El contacto debe tener al menos 7 caracteres';
+        }
+
+        // Validar email si está presente (formato válido)
+        if (formData.email && formData.email.trim() !== '') {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email.trim())) {
+                newErrors.email = 'Ingrese un correo electrónico válido';
+            }
         }
 
         setErrors(newErrors);
@@ -357,7 +385,7 @@ const DriverFormModal: React.FC<DriverFormModalProps> = ({ driver, onSave, onClo
                     
                     <div>
                         <label htmlFor="contact" className="block text-sm font-medium text-gray-700 mb-1">
-                            Contacto <span className="text-red-500">*</span>
+                            Teléfono <span className="text-red-500">*</span>
                         </label>
                         <input 
                             type="text" 
@@ -371,6 +399,26 @@ const DriverFormModal: React.FC<DriverFormModalProps> = ({ driver, onSave, onClo
                         />
                         {errors.contact && <p className="text-red-500 text-xs mt-1">{errors.contact}</p>}
                     </div>
+                </div>
+
+                <div className="mb-4">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                        Correo Electrónico 
+                        <span className="text-gray-500 text-xs ml-2">(Opcional - Se usará para enviar notificaciones)</span>
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email"
+                        name="email" 
+                        value={formData.email} 
+                        onChange={handleChange} 
+                        placeholder="Ej: conductor@personeria.gov.co" 
+                        className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+                    />
+                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                    <p className="text-xs text-gray-500 mt-1">
+                        📧 Este correo se usará para enviar notificaciones de asignación de servicios
+                    </p>
                 </div>
                 
                 <div className="mb-6">

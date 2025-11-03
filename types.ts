@@ -24,29 +24,44 @@ export interface Driver {
   name: string;
   licenseNumber: string;
   contact: string;
+  email?: string; // Correo electrónico del conductor
   status: DriverStatus;
 }
 
 export interface Vehicle {
   id: string;
-  make: string;
-  model: string;
+  // Datos básicos
+  plate: string; // PLACA
+  make: string; // MARCA
+  model: string; // LÍNEA
   year: number;
-  plate: string;
-  status: VehicleStatus;
-  historyFile?: string; // Ruta al archivo Excel de hoja de vida
-  mileage?: number; // Kilometraje actual
-  vin?: string; // Número de identificación vehicular
-  color?: string; // Color del vehículo
-  fuelType?: string; // Tipo de combustible
-  capacity?: number; // Capacidad de pasajeros
-  engineNumber?: string; // Número de motor
-  chassisNumber?: string; // Número de chasis
+  type?: string; // TIPO (campero, camioneta, etc)
+  bodyType?: string; // TIPO CARROCERÍA
+  color?: string; // COLOR
+  
+  // Motor y mecánica
+  engineNumber?: string; // NÚMERO DE MOTOR
+  chassisNumber?: string; // NÚMERO DE CHASIS
+  cylinderCapacity?: string; // CILINDRAJE
+  serialNumber?: string; // SERIE No.
+  fuelType?: string; // TIPO COMBUSTIBLE
+  
+  // Capacidad
+  capacity?: number; // No. DE PASAJEROS
+  
+  // Documentación
+  transitLicense?: string; // LICENCIA TRÁNSITO No.
+  vin?: string; // VIN (Número de identificación vehicular)
   owner?: string; // Propietario
   insuranceCompany?: string; // Aseguradora
   insurancePolicy?: string; // Número de póliza
   soatExpiry?: string; // Fecha vencimiento SOAT
   techReviewExpiry?: string; // Fecha vencimiento revisión técnico-mecánica
+  
+  // Control interno
+  status: VehicleStatus;
+  mileage?: number; // Kilometraje actual
+  historyFile?: string; // Ruta al archivo Excel de hoja de vida
 }
 
 export interface VehicleHistory {
@@ -68,6 +83,8 @@ export interface TransportRequest {
   origin: string;
   destination: string;
   passengers: number;
+  purpose?: string; // Motivo del desplazamiento
+  observations?: string; // Observaciones adicionales
   status: RequestStatus;
   vehicleId?: string;
   driverId?: string;
