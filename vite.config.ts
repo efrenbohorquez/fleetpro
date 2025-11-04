@@ -7,8 +7,15 @@ export default defineConfig({
     host: '0.0.0.0', // Escuchar en todas las interfaces de red
     strictPort: false,
     open: true,
+    allowedHosts: [
+      'pseudoalveolar-coretta-nonbibulously.ngrok-free.dev',
+      '.ngrok-free.dev', // Permitir cualquier subdominio de ngrok
+      '.ngrok.io',
+      '.ngrok.app',
+    ],
     hmr: {
       overlay: true,
+      clientPort: 443, // Puerto HTTPS para HMR a través de ngrok
     },
   },
   plugins: [react()],
