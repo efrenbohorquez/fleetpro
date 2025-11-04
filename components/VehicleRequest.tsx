@@ -11,6 +11,7 @@ import {
   notifyCompletion 
 } from '../services/notificationService';
 import { archiveRequest } from '../services/storageService';
+import ImportRequests from './ImportRequests';
 
 interface VehicleRequestProps {
   requests: TransportRequest[];
@@ -28,6 +29,7 @@ const VehicleRequest: React.FC<VehicleRequestProps> = ({ requests, setRequests, 
   const [selectedRequest, setSelectedRequest] = useState<TransportRequest | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const handleViewDetail = (request: TransportRequest) => {
     setSelectedRequest(request);
@@ -99,7 +101,7 @@ const VehicleRequest: React.FC<VehicleRequestProps> = ({ requests, setRequests, 
       </div>
 
       <div className="max-w-7xl mx-auto px-6">
-        {viewMode === 'menu' && <MenuView onNavigate={setViewMode} requestCount={requests.length} />}
+        {viewMode === 'menu' && <MenuView onNavigate={setViewMode} onShowImport={() => setShowImportModal(true)} requestCount={requests.length} />}
         {viewMode === 'newRequest' && <NewRequestView requests={requests} setRequests={setRequests} onBack={() => setViewMode('menu')} />}
         {viewMode === 'viewRequests' && (
           <ViewRequestsView 
@@ -142,16 +144,31 @@ const VehicleRequest: React.FC<VehicleRequestProps> = ({ requests, setRequests, 
           onAssign={handleAssignmentComplete}
         />
       )}
+
+      {showImportModal && (
+        <ImportRequests
+          onImport={(importedRequests) => {
+            const newRequests = importedRequests.map(req => ({
+              ...req,
+              id: `r${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+            }));
+            setRequests(prev => [...prev, ...newRequests]);
+            console.log(`✅ ${newRequests.length} solicitudes importadas`);
+          }}
+          onClose={() => setShowImportModal(false)}
+        />
+      )}
     </div>
   );
 };
 
 interface MenuViewProps {
   onNavigate: (view: ViewMode) => void;
+  onShowImport: () => void;
   requestCount: number;
 }
 
-const MenuView: React.FC<MenuViewProps> = ({ onNavigate, requestCount }) => {
+const MenuView: React.FC<MenuViewProps> = ({ onNavigate, onShowImport, requestCount }) => {
   const menuOptions = [
     {
       id: 'newRequest',
@@ -171,14 +188,23 @@ const MenuView: React.FC<MenuViewProps> = ({ onNavigate, requestCount }) => {
       hoverColor: 'hover:from-teal-600 hover:to-cyan-700',
       view: 'viewRequests' as ViewMode,
     },
+    {
+      id: 'import',
+      title: 'Importar',
+      subtitle: 'Cargar solicitudes desde Excel',
+      icon: FileText,
+      color: 'from-purple-500 to-indigo-600',
+      hoverColor: 'hover:from-purple-600 hover:to-indigo-700',
+      action: 'import',
+    },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto py-12">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto py-12">
       {menuOptions.map((option) => (
         <button
           key={option.id}
-          onClick={() => onNavigate(option.view)}
+          onClick={() => option.action === 'import' ? onShowImport() : onNavigate(option.view as ViewMode)}
           className={`group relative bg-gradient-to-br ${option.color} ${option.hoverColor} p-8 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300`}
         >
           <div className="flex flex-col items-center text-white">
