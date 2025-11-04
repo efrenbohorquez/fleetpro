@@ -1,3 +1,7 @@
 ﻿# Archivos temporales de Excel
 ~$*.xlsx
 ~$*.xls
+
+# Archivos de importación Excel
+data/excel-imports/*.xlsx
+data/excel-imports/*.xls

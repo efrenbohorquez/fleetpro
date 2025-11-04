@@ -66,41 +66,60 @@ D:\Solicitud transporte personería (1-35).xlsx
 
 El sistema mapea automáticamente las columnas del formulario de Microsoft Forms a los campos de FleetPro:
 
-| Columna Microsoft Forms | Campo FleetPro | Requerido |
-|------------------------|----------------|-----------|
-| **Marca temporal** | Fecha de solicitud | ✅ |
-| **Nombre del Solicitante** o **Nombre** | Solicitante | ✅ |
-| **Correo electrónico** o **Email** | Email del Solicitante | ✅ |
-| **Dependencia** o **Área** | Dependencia | ✅ |
-| **Email de la Dependencia** | Email de la Dependencia | ⬜ |
-| **Fecha de Salida** o **Fecha programada** | Fecha de Salida | ✅ |
-| **Origen** o **Lugar de Origen** | Origen | ✅ |
-| **Destino** o **Lugar de Destino** | Destino | ✅ |
-| **Número de Pasajeros** o **Pasajeros** | N° de Pasajeros | ✅ |
-| **Motivo del Desplazamiento** o **Motivo** | Motivo del Viaje | ✅ |
-| **Observaciones adicionales** | Observaciones | ⬜ |
+| Columna Microsoft Forms | Campo FleetPro | Requerido | Notas |
+|------------------------|----------------|-----------|-------|
+| **Start time** | Fecha de solicitud | ✅ | Fecha/hora de envío del formulario |
+| **NOMBRE SOLICITANTE** | Solicitante | ✅ | Nombre completo y cargo |
+| **CORREO INSTITUCIONAL** | Email del Solicitante | ✅ | Correo @personeriabogota.gov.co |
+| **DEPENDENCIA** | Dependencia | ✅ | Nombre completo de la dependencia |
+| **FECHA DEL SERVICIO** | Fecha de Salida | ✅ | Fecha programada del servicio |
+| **HORA INICIO** | Observaciones | ✅ | Se incluye en observaciones |
+| **HORA FINALIZACIÓN** | Observaciones | ✅ | Se incluye en observaciones |
+| **TELÉFONO DE CONTACTO** | Observaciones | ⬜ | Se incluye en observaciones |
+| **DESCRIPCIÓN DEL SERVICIO** | Motivo del Viaje | ✅ | Descripción completa del servicio |
+| **ID** | - | ⬜ | No se usa (se genera ID interno) |
+| **Completion time** | - | ⬜ | No se usa |
+| **Email** | - | ⬜ | No se usa (es "anonymous") |
+
+### 📝 Notas Importantes:
+
+- **Origen y Destino**: El formulario actual no incluye estas columnas. El sistema usa valores por defecto:
+  - Origen: "Personería Distrital"
+  - Destino: "Por definir" (debe completarse manualmente después de importar)
+  
+- **Pasajeros**: El formulario actual no incluye esta columna. El sistema usa valor por defecto: 1 pasajero
+
+- **Observaciones**: Se concatenan automáticamente:
+  - Hora inicio
+  - Hora finalización  
+  - Teléfono de contacto
 
 ---
 
-## ⚙️ Configuración del Formulario de Microsoft Forms
+## ⚙️ Configuración Actual del Formulario
 
-Para que la importación funcione correctamente, asegúrate de que tu formulario tenga estas preguntas:
+El formulario de Microsoft Forms actualmente configurado tiene las siguientes preguntas:
 
-### Preguntas Obligatorias:
+### ✅ Campos Actuales:
 
-1. **Nombre del Solicitante** (Texto)
-2. **Correo electrónico** (Email)
-3. **Dependencia** (Texto o Selección)
-4. **Fecha de Salida** (Fecha)
-5. **Origen** (Texto)
-6. **Destino** (Texto)
-7. **Número de Pasajeros** (Número)
-8. **Motivo del Desplazamiento** (Texto largo)
+1. **DEPENDENCIA** - Texto corto
+2. **TELÉFONO DE CONTACTO** - Texto corto
+3. **NOMBRE SOLICITANTE** - Texto corto (incluir nombre y cargo)
+4. **CORREO INSTITUCIONAL** - Texto corto (email)
+5. **FECHA DEL SERVICIO** - Selector de fecha
+6. **HORA INICIO** - Texto corto (formato: HH:MM AM/PM)
+7. **HORA FINALIZACIÓN** - Texto corto (formato: HH:MM AM/PM)
+8. **DESCRIPCIÓN DEL SERVICIO** - Texto largo
 
-### Preguntas Opcionales:
+### ⚠️ Campos Faltantes (Recomendados para agregar):
 
-- Email de la Dependencia
-- Observaciones adicionales
+Para mejorar el flujo de trabajo, considera agregar estas preguntas al formulario:
+
+1. **ORIGEN** - Texto corto (dirección de origen)
+2. **DESTINO** - Texto corto (dirección de destino)
+3. **NÚMERO DE PASAJEROS** - Número (cantidad de personas)
+
+Actualmente estos campos usan valores por defecto y deben completarse manualmente después de importar.
 
 ---
 

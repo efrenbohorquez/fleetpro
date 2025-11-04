@@ -43,20 +43,23 @@ const ImportRequests: React.FC<ImportRequestsProps> = ({ onImport, onClose }) =>
 
   const mapFormDataToRequest = (row: any): Omit<TransportRequest, 'id'> => {
     // Mapeo de columnas de Microsoft Forms a nuestro sistema
-    // AJUSTA ESTOS NOMBRES según las columnas reales de tu formulario
+    // Columnas reales del Excel:
+    // ID, Start time, Completion time, Email, DEPENDENCIA, TELÉFONO DE CONTACTO,
+    // NOMBRE SOLICITANTE, CORREO INSTITUCIONAL, FECHA DEL SERVICIO,
+    // HORA INICIO, HORA FINALIZACIÓN, DESCRIPCIÓN DEL SERVICIO
     
     return {
-      requester: row['Nombre del Solicitante'] || row['Nombre'] || row['Solicitante'] || '',
-      requesterEmail: row['Correo electrónico'] || row['Email'] || row['Email del Solicitante'] || '',
-      department: row['Dependencia'] || row['Área'] || row['Departamento'] || '',
-      departmentEmail: row['Email de la Dependencia'] || '',
-      date: formatDate(row['Marca temporal'] || row['Fecha'] || new Date().toISOString()),
-      departureDate: formatDate(row['Fecha de Salida'] || row['Fecha programada'] || ''),
-      origin: row['Origen'] || row['Lugar de Origen'] || '',
-      destination: row['Destino'] || row['Lugar de Destino'] || '',
+      requester: row['NOMBRE SOLICITANTE'] || row['Nombre del Solicitante'] || row['Nombre'] || '',
+      requesterEmail: row['CORREO INSTITUCIONAL'] || row['Email'] || row['Correo electrónico'] || '',
+      department: row['DEPENDENCIA'] || row['Dependencia'] || row['Área'] || '',
+      departmentEmail: row['CORREO INSTITUCIONAL'] || row['Email de la Dependencia'] || '',
+      date: formatDate(row['Start time'] || row['Marca temporal'] || new Date().toISOString()),
+      departureDate: formatDate(row[' FECHA DEL SERVICIO'] || row['FECHA DEL SERVICIO'] || row['Fecha de Salida'] || ''),
+      origin: row['Origen'] || row['Lugar de Origen'] || 'Personería Distrital',
+      destination: row['Destino'] || row['Lugar de Destino'] || 'Por definir',
       passengers: parseInt(row['Número de Pasajeros'] || row['Pasajeros'] || '1'),
-      purpose: row['Motivo del Desplazamiento'] || row['Motivo'] || row['Observaciones'] || '',
-      observations: row['Observaciones adicionales'] || '',
+      purpose: row['DESCRIPCIÓN DEL SERVICIO'] || row['Motivo del Desplazamiento'] || row['Motivo'] || '',
+      observations: `Hora inicio: ${row['HORA INICIO'] || 'N/A'} - Hora fin: ${row['HORA FINALIZACIÓN'] || 'N/A'}${row['TELÉFONO DE CONTACTO'] ? ` - Tel: ${row['TELÉFONO DE CONTACTO']}` : ''}`,
       status: RequestStatus.Pending,
     };
   };
